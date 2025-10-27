@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  mp3-ogg: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg
+  mp3to: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to
+
 importers:
 
   .:
@@ -17,6 +21,12 @@ importers:
       '@oclif/plugin-plugins':
         specifier: ^5
         version: 5.4.51
+      mp3-ogg:
+        specifier: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg
+        version: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg
+      mp3to:
+        specifier: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to
+        version: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to
     devDependencies:
       '@eslint/compat':
         specifier: ^1

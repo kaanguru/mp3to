@@ -3,3 +3,7 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - unrs-resolver
+
+overrides:
+  mp3-ogg: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg
+  mp3to: link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to

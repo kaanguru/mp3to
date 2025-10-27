@@ -10,7 +10,9 @@
   "dependencies": {
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5"
+    "@oclif/plugin-plugins": "^5",
+    "mp3-ogg": "link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg",
+    "mp3to": "link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to"
   },
   "devDependencies": {
     "@eslint/compat": "^1",
