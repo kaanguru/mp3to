@@ -1,7 +1,7 @@
 {
   "name": "mp3to",
   "description": "mp3 to ogg/aac/flac converter tool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "kaanguru",
   "bin": {
     "mp3to": "./bin/run.js"
