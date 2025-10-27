@@ -2,6 +2,7 @@ ignoredBuiltDependencies:
   - yarn
 
 onlyBuiltDependencies:
+  - ffmpeg-static
   - unrs-resolver
 
 overrides:
