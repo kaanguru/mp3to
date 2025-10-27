@@ -24,7 +24,7 @@ $ npm install -g mp3to
 $ mp3to COMMAND
 running command...
 $ mp3to (--version)
-mp3to/1.1.0 win32-x64 node-v22.21.0
+mp3to/1.2.0 win32-x64 node-v22.21.0
 $ mp3to --help [COMMAND]
 USAGE
   $ mp3to COMMAND

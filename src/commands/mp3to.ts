@@ -10,16 +10,22 @@ const ffmpegPath = ffmpegStatic as unknown as string | undefined
 // Function to check if ffmpeg is available
 const isFfmpegAvailable = (): boolean => ffmpegPath !== null && ffmpegPath !== undefined
 
-// Function to find all MP3 files in a directory
-const findMp3Files = (dir: string): string[] => {
+// Function to find all audio files in a directory (MP3, OGG, and other formats)
+const findAudioFiles = (dir: string): string[] => {
   const files = fs.readdirSync(dir)
-  return files.filter((file) => file.toLowerCase().endsWith('.mp3') && fs.statSync(path.join(dir, file)).isFile())
+  return files.filter((file) => {
+    const lowerFile = file.toLowerCase();
+    return (lowerFile.endsWith('.mp3') || lowerFile.endsWith('.ogg') || lowerFile.endsWith('.m4a') || lowerFile.endsWith('.flac')) 
+           && fs.statSync(path.join(dir, file)).isFile()
+  })
 }
 
-// Function to convert an MP3 file to the specified format using ffmpeg
-const convertMp3ToFile = (mp3File: string, format: string, quality: number): Promise<void> =>
+// Function to convert an audio file to the specified format using ffmpeg
+const convertAudioFile = (inputFile: string, format: string, quality: number, mono: boolean, stereo: boolean, outputDir: string = '.'): Promise<void> =>
   new Promise((resolve, reject) => {
-    const outputFile = mp3File.replace(/\.mp3$/i, `.${format}`)
+    const inputExt = path.extname(inputFile).toLowerCase(); 
+    const fileNameWithoutExt = path.basename(inputFile, inputExt);
+    const outputFile = path.join(outputDir, `${fileNameWithoutExt}.${format}`)
 
     // Map format names to appropriate ffmpeg codecs and quality parameters
     let qualityFlag = ''
@@ -53,8 +59,24 @@ const convertMp3ToFile = (mp3File: string, format: string, quality: number): Pro
       }
     }
 
-    // Use ffmpeg to convert MP3 to the specified format with quality settings
-    const ffmpegProcess = spawn(ffmpegPath!, ['-i', mp3File, qualityFlag, qualityValue, outputFile, '-y'], {
+    // Build the argument list for ffmpeg
+    const args = ['-i', inputFile]
+    
+    // Add channel configuration if specified
+    if (mono && !stereo) {
+      args.push('-ac', '1') // Force mono
+    } else if (stereo && !mono) {
+      args.push('-ac', '2') // Force stereo
+    }
+    
+    // Add quality settings
+    args.push(qualityFlag, qualityValue)
+    
+    // Add output file
+    args.push(outputFile, '-y')
+
+    // Use ffmpeg to convert audio to the specified format with quality settings
+    const ffmpegProcess = spawn(ffmpegPath!, args, {
       shell: true, // Add shell option to properly resolve PATH on Windows
       stdio: ['pipe', 'pipe', 'pipe'],
     })
@@ -69,7 +91,7 @@ const convertMp3ToFile = (mp3File: string, format: string, quality: number): Pro
       if (code === 0) {
         resolve()
       } else {
-        reject(new Error(`ffmpeg exited with code ${code}. Conversion failed for ${mp3File}`))
+        reject(new Error(`ffmpeg exited with code ${code}. Conversion failed for ${inputFile}`))
       }
     })
 
@@ -78,47 +100,75 @@ const convertMp3ToFile = (mp3File: string, format: string, quality: number): Pro
     })
   })
 
-// Function to convert multiple MP3 files to the specified format
-const convertMultipleMp3ToFile = async (
-  mp3Files: string[],
+// Function to convert multiple audio files to the specified format
+const convertMultipleAudioFiles = async (
+  audioFiles: string[],
   format: string,
   quality: number,
+  mono: boolean,
+  stereo: boolean,
   log: (message: string) => void,
   error: (message: string) => void,
   // eslint-disable-next-line max-params
 ): Promise<void> => {
-  if (mp3Files.length === 0) {
-    log('No MP3 files found in the current directory.')
+  if (audioFiles.length === 0) {
+    log('No audio files found in the current directory.')
     return
   }
 
-  log(`Found ${mp3Files.length} MP3 file(s) to convert to ${format.toUpperCase()}.`)
+  log(`Found ${audioFiles.length} audio file(s) to convert to ${format.toUpperCase()}.`)
+  if (mono) {
+    log('Output will be forced to mono.')
+  } else if (stereo) {
+    log('Output will be forced to stereo.')
+  } else {
+    log('Output will preserve original channel configuration.')
+  }
 
-  // Convert each MP3 file to the specified format
-  const conversionPromises = mp3Files.map(async (mp3File, index) => {
-    const outputFile = mp3File.replace(/\.mp3$/i, `.${format}`)
-    log(`Converting (${index + 1}/${mp3Files.length}): ${mp3File} -> ${outputFile}`)
+  // Determine the output directory based on flags to support the subfolder requirement
+  let outputDir = '.'
+  if (mono) {
+    outputDir = 'm' // Create or use 'm' subfolder for mono output
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true })
+    }
+  } else if (stereo) {
+    outputDir = 's' // Create or use 's' subfolder for stereo output
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true })
+    }
+  }
+
+  // Convert each audio file to the specified format
+  const conversionPromises = audioFiles.map(async (audioFile, index) => {
+    const inputExt = path.extname(audioFile).toLowerCase();
+    const fileNameWithoutExt = path.basename(audioFile, inputExt);
+    const outputFile = path.join(outputDir, `${fileNameWithoutExt}.${format}`);
+    
+    log(`Converting (${index + 1}/${audioFiles.length}): ${audioFile} -> ${outputFile}`)
 
     try {
-      await convertMp3ToFile(mp3File, format, quality)
-      log(`✓ Converted: ${mp3File} -> ${outputFile}`)
+      await convertAudioFile(audioFile, format, quality, mono, stereo, outputDir)
+      log(`✓ Converted: ${audioFile} -> ${outputFile}`)
     } catch (error_) {
-      error(`Failed to convert ${mp3File}: ${(error_ as Error).message}`)
+      error(`Failed to convert ${audioFile}: ${(error_ as Error).message}`)
     }
   })
 
   await Promise.all(conversionPromises)
 }
 
-export default class Mp3toCommand extends Command {
-  static description = 'Convert all MP3 files in the current directory to OGG, AAC/M4A, or FLAC format'
+export default class AudioConverterCommand extends Command {
+  static description = 'Convert all audio files in the current directory to OGG, AAC/M4A, or FLAC format'
   static examples = [
-    '<%= config.bin %>', // Convert all MP3 files to OGG with default quality
+    '<%= config.bin %>', // Convert all audio files to OGG with default quality
     '<%= config.bin %> -f ogg', // Convert to OGG format
     '<%= config.bin %> -f m4a -q 5', // Convert to M4A/AAC format
     '<%= config.bin %> -f flac -q 0', // Convert to FLAC format
     '<%= config.bin %> -q 8', // Convert to OGG with quality 8
     '<%= config.bin %> -f ogg -q 1', // Example with format and quality
+    '<%= config.bin %> -m', // Convert to mono OGG with default quality, output to "m" subfolder
+    '<%= config.bin %> -s -f m4a', // Convert to stereo M4A, output to "s" subfolder
   ]
   static flags = {
     format: Flags.string({
@@ -134,12 +184,29 @@ export default class Mp3toCommand extends Command {
       max: 10,
       min: 0,
     }),
+    stereo: Flags.boolean({
+      char: 's',
+      default: false,
+      description: 'Force stereo output, output to "s" subfolder (default is to preserve original channel configuration)',
+      exclusive: ['mono'], // Only one of stereo or mono can be specified
+    }),
+    mono: Flags.boolean({
+      char: 'm',
+      default: false,
+      description: 'Force mono output, output to "m" subfolder (default is to preserve original channel configuration)',
+      exclusive: ['stereo'], // Only one of mono or stereo can be specified
+    }),
   }
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Mp3toCommand)
+    const {flags} = await this.parse(AudioConverterCommand)
 
-    this.log(`Searching for MP3 files in the current directory...`)
+    // Check if both mono and stereo flags are specified
+    if (flags.mono && flags.stereo) {
+      this.error('Cannot specify both mono and stereo flags. Please choose one or neither.')
+    }
+
+    this.log(`Searching for audio files in the current directory...`)
     this.log(`Output format: ${flags.format.toUpperCase()}`)
     this.log(`Quality setting: ${flags.quality} (0=highest, 10=lowest)`)
 
@@ -148,10 +215,10 @@ export default class Mp3toCommand extends Command {
       this.error('ffmpeg could not be initialized. Please ensure your system supports the required binaries.')
     }
 
-    // Find all MP3 files in the current directory
-    const mp3Files = findMp3Files('.')
+    // Find all audio files in the current directory
+    const audioFiles = findAudioFiles('.')
 
-    await convertMultipleMp3ToFile(mp3Files, flags.format, flags.quality, this.log.bind(this), this.error.bind(this))
+    await convertMultipleAudioFiles(audioFiles, flags.format, flags.quality, flags.mono, flags.stereo, this.log.bind(this), this.error.bind(this))
 
     this.log('Conversion completed!')
   }
