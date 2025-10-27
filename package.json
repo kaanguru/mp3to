@@ -10,7 +10,8 @@
   "dependencies": {
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5"
+    "@oclif/plugin-plugins": "^5",
+    "ffmpeg-static": "^5.2.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1",
@@ -47,17 +48,14 @@
   "oclif": {
     "bin": "mp3to",
     "dirname": "mp3to",
-    "commands": "./dist/commands",
+    "commands": {
+      "strategy": "single",
+      "target": "./dist/commands/mp3to.js"
+    },
     "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-help"
     ],
-    "topicSeparator": " ",
-    "topics": {
-      "hello": {
-        "description": "Say hello to the world and others"
-      }
-    }
+    "topicSeparator": " "
   },
   "repository": "kaanguru/mp3to",
   "scripts": {
