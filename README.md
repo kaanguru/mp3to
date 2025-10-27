@@ -20,7 +20,7 @@ $ npm install -g mp3to
 $ mp3to COMMAND
 running command...
 $ mp3to (--version)
-mp3to/0.0.1 win32-x64 node-v22.21.0
+mp3to/1.0.0 win32-x64 node-v22.21.0
 $ mp3to --help [COMMAND]
 USAGE
   $ mp3to COMMAND
@@ -70,7 +70,7 @@ EXAMPLES
   $ mp3to convert --quality 8
 ```
 
-_See code: [src/commands/convert.ts](https://github.com/kaanguru/mp3to/blob/v0.0.1/src/commands/convert.ts)_
+_See code: [src/commands/convert.ts](https://github.com/kaanguru/mp3to/blob/v1.0.0/src/commands/convert.ts)_
 
 ## `mp3to help [COMMAND]`
 

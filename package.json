@@ -1,7 +1,7 @@
 {
   "name": "mp3to",
   "description": "mp3 to ogg/aac/flac converter tool",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "kaanguru",
   "bin": {
     "mp3to": "./bin/run.js"
@@ -10,9 +10,7 @@
   "dependencies": {
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5",
-    "mp3-ogg": "link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3-ogg",
-    "mp3to": "link:../../../../AppData/Local/pnpm/global/5/node_modules/mp3to"
+    "@oclif/plugin-plugins": "^5"
   },
   "devDependencies": {
     "@eslint/compat": "^1",
